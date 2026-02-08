@@ -137,3 +137,18 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# === Terraform ===
+# プラグイン（initでダウンロードされるバイナリ）
+.terraform/
+
+# ロックファイル（本来はgit管理しても良いが、最初は外しておくとトラブルが少ない）
+.terraform.lock.hcl
+
+# 念のためStateファイル（S3管理にするが、ローカルに作られた場合も考慮して除外）
+*.tfstate
+*.tfstate.*
+
+# === Lambda ===
+# デプロイ用に固めたzipファイル
+*.zip
