@@ -50,12 +50,29 @@ AWSのサーバーレス構成を採用する。
 
 ※ アクセス頻度が低く、予測が立てにくいためオンデマンドを採用。
 
+| 項目名 (Attribute) | 役割 | 型 | 備考 |
+| :--- | :--- | :--- | :--- |
+| **userId** | PK (Partition Key) | String | Cognito User ID (誰のデータか) |
+| **bookmarkId** | SK (Sort Key) | String | UUID (ブックマークごとの一意識別子) |
+| **url** | Data | String | 保存対象のURL |
+| **title** | Data | String | ページタイトル |
+| **tags** | Data | List | 技術カテゴリ (例: `["AWS", "React"]`) |
+| **status** | Data | String | `unread`, `learning`, `done` |
+| **createdAt** | Data | String | ISO8601 (登録日時) |
+
 ---
 
 ## 4. API定義
 
 - 全APIエンドポイントで **Amazon Cognito 認証を必須**とする
 - 未認証ユーザーからのアクセスは拒否
+
+| Method | Path | Description | Request Body (JSON) |
+| :--- | :--- | :--- | :--- |
+| **POST** | `/bookmarks` | ブックマーク新規登録 | `{ "url": "...", "tags": [...] }` |
+| **GET** | `/bookmarks` | ログインユーザーの一覧取得 | - |
+| **PATCH** | `/bookmarks/{id}` | ステータス・タグの更新 | `{ "status": "...", "tags": [...] }` |
+| **DELETE** | `/bookmarks/{id}` | ブックマークの削除 | - |
 
 ### APIの役割
 - ブックマークの作成・取得・更新・削除
