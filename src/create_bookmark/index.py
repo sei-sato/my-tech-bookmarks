@@ -10,14 +10,19 @@ dynamodb = boto3.resource('dynamodb')
 table = dynamodb.Table(TABLE_NAME)
 
 def handler(event, context):
-    # 本来はAPIからデータを受け取りますが、まずは疎通確認用に固定データを入れる
+    body = json.loads(event.get('body', '{}'))
+    
+    # ユーザーが送ってきたURLを取得（なければデフォルト）
+    target_url = body.get('url', 'https://example.com')
+    target_title = body.get('title', 'No Title')
+    
     bookmark_id = str(uuid.uuid4())
     
     item = {
         'userId': 'test-user-001', 
         'bookmarkId': bookmark_id,
-        'url': 'https://aws.amazon.com/',
-        'title': 'AWS Official Site',
+        'url': target_url,
+        'title': target_title,
         'status': 'unread',
         'createdAt': datetime.datetime.now().isoformat()
     }
@@ -26,7 +31,11 @@ def handler(event, context):
         table.put_item(Item=item)
         return {
             'statusCode': 200,
-            'body': json.dumps({'message': f"Success: {bookmark_id}"})
+            'headers': {
+                "Content-Type": "application/json",
+                "Access-Control-Allow-Origin": "*"
+            },
+            'body': json.dumps({'message': f"Success: {target_url}"})
         }
     except Exception as e:
         print(e)
