@@ -1,8 +1,14 @@
 # --- 1. ソースコードを自動でzip化 ---
-data "archive_file" "lambda_zip" {
+data "archive_file" "create_bookmark_zip" {
   type        = "zip"
   source_dir  = "../src/create_bookmark"
   output_path = "lambda_create_bookmark.zip"
+}
+
+data "archive_file" "get_bookmarks_zip" {
+  type        = "zip"
+  source_dir  = "../src/get_bookmarks"
+  output_path = "get_bookmarks.zip"
 }
 
 # --- 2. Lambda実行用ロール (IAM) ---
@@ -28,7 +34,7 @@ resource "aws_iam_role_policy" "lambda_policy" {
     Version = "2012-10-17"
     Statement = [
       {
-        Action   = ["dynamodb:PutItem", "dynamodb:GetItem", "dynamodb:Query"]
+        Action   = ["dynamodb:PutItem", "dynamodb:GetItem", "dynamodb:Query", "dynamodb:Scan"]
         Effect   = "Allow"
         Resource = aws_dynamodb_table.bookmarks.arn # 前に作ったテーブルのARNを参照
       },
@@ -43,12 +49,12 @@ resource "aws_iam_role_policy" "lambda_policy" {
 
 # --- 4. Lambda関数本体の定義 ---
 resource "aws_lambda_function" "create_bookmark" {
-  filename         = data.archive_file.lambda_zip.output_path
+  filename         = data.archive_file.create_bookmark_zip.output_path
   function_name    = "CreateBookmarkFunction"
   role             = aws_iam_role.lambda_role.arn
   handler          = "index.handler" # index.py の handler 関数を呼ぶという意味
   runtime          = "python3.12"
-  source_code_hash = data.archive_file.lambda_zip.output_base64sha256
+  source_code_hash = data.archive_file.create_bookmark_zip.output_base64sha256
 
   environment {
     variables = {
@@ -56,3 +62,19 @@ resource "aws_lambda_function" "create_bookmark" {
     }
   }
 }
+
+# 取得用Lambda
+resource "aws_lambda_function" "get_bookmarks" {
+  filename      = data.archive_file.get_bookmarks_zip.output_path
+  function_name = "GetBookmarksFunction"
+  role          = aws_iam_role.lambda_role.arn
+  handler       = "index.handler"
+  runtime       = "python3.12"
+
+  environment {
+    variables = {
+      TABLE_NAME = aws_dynamodb_table.bookmarks.name
+    }
+  }
+}
+
