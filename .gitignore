@@ -152,3 +152,4 @@ vite.config.ts.timestamp-*
 # === Lambda ===
 # デプロイ用に固めたzipファイル
 *.zip
+terraform/lambda_layers/
