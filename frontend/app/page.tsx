@@ -29,7 +29,14 @@ export default function Home() {
       const response = await fetch(API_URL);
       if (!response.ok) throw new Error("取得失敗");
       const data = await response.json();
-      const sortedData = data.sort((a: Bookmark, b: Bookmark) => b.timestamp - a.timestamp);
+      
+      // ソート処理：timestampを数値に変換して新しい順（降順）に並び替え
+      const sortedData = data.sort((a: Bookmark, b: Bookmark) => {
+        const timeA = Number(a.timestamp) || 0;
+        const timeB = Number(b.timestamp) || 0;
+        return timeB - timeA;
+      });
+      
       setBookmarks(sortedData);
     } catch (err) {
       console.error("Fetch error:", err);
@@ -46,7 +53,6 @@ export default function Home() {
     e.preventDefault();
     setStatusMsg("保存中...");
     try {
-      // タイトルは送らず、URLのみをPOSTする
       const response = await fetch(API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -56,7 +62,10 @@ export default function Home() {
       if (response.ok) {
         setStatusMsg("保存に成功しました！");
         setUrl("");
-        fetchBookmarks();
+        // 反映時間を考慮して少しだけ待ってから再取得
+        setTimeout(() => {
+          fetchBookmarks();
+        }, 500);
       } else {
         setStatusMsg("エラーが発生しました。URLを修正してください。");
       }
@@ -113,7 +122,6 @@ export default function Home() {
       <div className="max-w-3xl mx-auto">
         <header className="mb-10 text-center">
           <h1 className="text-4xl font-extrabold text-blue-600 mb-2">Tech Bookmarks</h1>
-          <p className="text-gray-500">URLだけで自動ブックマーク</p>
         </header>
         
         <section className="bg-white p-6 rounded-2xl shadow-sm mb-12 border border-gray-200">
@@ -121,7 +129,6 @@ export default function Home() {
             <span className="bg-blue-100 text-blue-600 p-1 rounded mr-2">🔗</span>
             新しいブックマーク
           </h2>
-          {/* フォームを横並びのシンプルな構成に変更 */}
           <form onSubmit={handleSubmit} className="flex flex-col md:flex-row gap-3">
             <input
               type="url"
@@ -204,7 +211,6 @@ export default function Home() {
                       <div className="overflow-hidden">
                         <div className="flex justify-between items-start mb-1 gap-2">
                           <h3 className="font-bold text-base text-gray-900 truncate group-hover:text-blue-600 transition">
-                            {/* タイトルがない場合の表示を考慮 */}
                             {bm.title || "読み込み中..."}
                           </h3>
                           <button 
@@ -235,7 +241,8 @@ export default function Home() {
                         
                         <div className="flex items-center space-x-2">
                           <span className="text-[10px] text-gray-400 shrink-0">
-                            {new Date(bm.timestamp * 1000).toLocaleDateString()}
+                            {/* timestampがある場合のみ日付を表示 */}
+                            {bm.timestamp ? new Date(Number(bm.timestamp) * 1000).toLocaleDateString() : "---"}
                           </span>
                           <button 
                             onClick={() => handleDelete(bm.bookmarkId)}

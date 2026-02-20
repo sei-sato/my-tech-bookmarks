@@ -90,6 +90,7 @@ resource "aws_lambda_function" "get_bookmarks" {
   role          = aws_iam_role.lambda_role.arn
   handler       = "index.handler"
   runtime       = "python3.12"
+  source_code_hash = data.archive_file.get_bookmarks_zip.output_base64sha256
 
   environment {
     variables = {

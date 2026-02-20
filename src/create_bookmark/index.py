@@ -126,6 +126,7 @@ def handler(event, context):
             "status": "unread",
             "image": ogp["image"],
             "description": ogp["description"],
+            "timestamp": timestamp,
             "createdAt": now.isoformat()
         }
 
